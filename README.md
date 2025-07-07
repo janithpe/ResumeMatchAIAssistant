@@ -1,4 +1,4 @@
-![Coming Soon](./img/coming_soon.jpg)  
+![Coming Soon](./assets/coming_soon.jpg)  
   
 # Resume Match AI Assistant
 
