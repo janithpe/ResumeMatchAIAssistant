@@ -20,45 +20,59 @@ job_file = st.file_uploader("📋 Upload Job Description (optional)", type=["pdf
 job_text_input = st.text_area("Or paste the job description below:", height=200)
 
 
-# Main Trigger Button
+# Main Trigger Button with File Collision Check
+duplicate_filename = False
+user_confirmed_duplicate = False
+
+if resume_file and job_file:
+    if resume_file.name == job_file.name:
+        duplicate_filename = True
+        st.warning(f"⚠️ Both uploaded files are named **{resume_file.name}**. This may indicate you've uploaded the same file twice.")
+
+        user_confirmed_duplicate = st.checkbox("Yes, I confirm these are two different files with the same name.")
+
+# Show analyze button if:
+#   - No duplicate filename, OR
+#   - User confirmed intentionally uploading files with same name
 if resume_file and (job_file or job_text_input.strip()):
-    if st.button("🔍 Analyze Now"):
-        with st.spinner("Extracting and analyzing..."):
-            resume_text = parse_resume(resume_file)
+    if not duplicate_filename or user_confirmed_duplicate:
+        if st.button("🔍 Analyze Now"):
+            with st.spinner("Extracting and analyzing..."):
+                resume_text = parse_resume(resume_file)
 
-            # Prioritize uploaded file over pasted text
-            if job_file:
-                job_text = parse_job_desc(job_file)
-            else:
-                job_text = job_text_input.strip()
+                # Prioritize uploaded file over pasted text
+                if job_file:
+                    job_text = parse_job_desc(job_file)
+                else:
+                    job_text = job_text_input.strip()
+
+                raw_analysis_markdown = get_resume_match_analysis(resume_text, job_text)
+
+                analyze_dict = parse_analysis_markdown(raw_analysis_markdown)
             
-            raw_analysis_markdown = get_resume_match_analysis(resume_text, job_text)
-            
-            analyze_dict = parse_analysis_markdown(raw_analysis_markdown)
+            st.success("✅ Analysis Complete!")
 
-        st.success("✅ Analysis Complete!")
+            # Show match score
+            score = analyze_dict['score']
+            emoji = "🔥" if score > 90 else "✅" if score > 80 else "⚠️"
+            st.subheader(f"{emoji} Resume Match Score")
+            st.markdown(f"{score}/100")
 
-        # Show match score
-        score = analyze_dict['score']
-        emoji = "🔥" if score > 90 else "✅" if score > 80 else "⚠️"
-        st.subheader(f"{emoji} Resume Match Score")
-        st.markdown(f"{score}/100")
+            # Show summary
+            st.subheader("📋 Match Summary")
+            st.markdown(analyze_dict['summary'])
 
-        # Show summary
-        st.subheader("📋 Match Summary")
-        st.markdown(analyze_dict['summary'])
+            # Show requirements
+            st.subheader("📌 Top Job Requirements")
+            st.markdown(analyze_dict['top_requirements'])
 
-        # Show requirements
-        st.subheader("📌 Top Job Requirements")
-        st.markdown(analyze_dict['top_requirements'])
+            # Show suggestions
+            st.subheader("💡 Resume Improvement Suggestions")
+            st.markdown(analyze_dict['suggestions'])
 
-        # Show suggestions
-        st.subheader("💡 Resume Improvement Suggestions")
-        st.markdown(analyze_dict['suggestions'])
-
-        # Full analysis result
-        with st.expander("📎 Full Raw AI Analysis"):
-            st.markdown(raw_analysis_markdown)
+            # Full analysis result
+            with st.expander("📎 Full Raw AI Analysis"):
+                st.markdown(raw_analysis_markdown)
 
 else:
     st.info("⬆️ Please upload a resume and either upload or paste the job description.")
