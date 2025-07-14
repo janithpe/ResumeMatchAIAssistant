@@ -1,5 +1,7 @@
 google-genai
+markdown2
 openai>=1.0.0
 pymupdf
 python-docx
 streamlit
+xhtml2pdf
